@@ -2,16 +2,14 @@ import os
 import numpy as np
 import pandas as pd
 import mne
-from mne import preprocessing
 import pickle
 import random
+from mne import preprocessing
 
 def get_pickle_data():
     """This unpickles mne data file and returns a raw MNE data object """
     pickle_off = open('data1.pkl', 'rb')
-    print(pickle_off)
     raw = pickle.load(pickle_off)[0]
-    print(raw)
     pickle_off.close()
     return raw
 
@@ -59,7 +57,7 @@ def divide_epochs(raw, e_len):
     """
     if raw.times[-1] >= e_len:
         events = _create_events(raw, e_len)
-    print(events)
+
     epochs = mne.Epochs(raw, events=events, tmax=e_len, preload=True)
     return epochs
 
@@ -96,14 +94,18 @@ def normalization(epochs):
     for i in range(epochs.shape[0]):
         epochs[i,:,:] = _normalize(epochs[i,:,:])
 
+    print(f"mean: {epochs.mean()}")
+    print(f"variance: {epochs.var()}")
+
     return epochs
 
 
 def PPD2(data_file, SAMPLE_TIME, CHANNELS):
+    """ Runs the whole pipeline and returs NumPy data array"""
     SAMPLE_TIME = 30
     CHANNELS = ['EEG Fpz-Cz', 'EEG Pz-Oz']
 
-    raw = get_pickle_data(data_file)
+    raw = get_fif_data(data_file)
 
     epochs = divide_epochs(raw, SAMPLE_TIME)
 
@@ -112,7 +114,6 @@ def PPD2(data_file, SAMPLE_TIME, CHANNELS):
     epochs = epochs.get_data() # turns into NumPy Array
 
     f_epochs = normalization(epochs)
-
     return f_epochs
 
 

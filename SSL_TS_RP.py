@@ -2,9 +2,9 @@ import os
 import numpy as np
 import pandas as pd
 import mne
-from mne import preprocessing
 import pickle
 import random
+from mne import preprocessing
 
 
 def temporal_shuffling(epochs, T_pos, T_neg):
@@ -23,7 +23,7 @@ def temporal_shuffling(epochs, T_pos, T_neg):
             c - Samples per channel = 30s * 128Hz
         TS_labels - Temporal Shuffling labels of dimensions (L, 1)
             for each y = {1: if sample1 < sample2 < sample3 and -1: otherwise}
-            """
+    """
     np.random.seed(420) # If we live in a deterministic world, should we even seed our pseudorandoms?
     random.seed(69)
 
@@ -100,7 +100,7 @@ def relative_positioning(epochs, T_pos, T_neg):
             c - Samples per channel = 30s * 128Hz
         TS_labels - Temporal Shuffling labels of dimensions (1, L)
             for each y = {1: if |sample1-sample2| < T_pos and -1: if |sample1-sample2| > T_neg}
-            """
+    """
     np.random.seed(420) # If we live in a deterministic world, should we even seed our pseudorandoms?
     random.seed(69)
 
