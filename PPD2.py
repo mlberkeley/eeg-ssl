@@ -13,13 +13,12 @@ def get_pickle_data():
     pickle_off.close()
     return raw
 
-
 ### Toy data to work with
 def get_fif_data(data_file):
     """takes in the data_file path and returns the raw MNE data object """
+    print('data_file:', data_file)
     raw = mne.io.read_raw_fif(data_file, preload=True)
     return raw
-
 
 def _create_events(raw, epoch_length):
     """Create events at the right times split raw into epochs of length epoch_length seconds
@@ -80,7 +79,8 @@ def downsample(epochs, chs, Hz=128):
 
 
 def _normalize(epoch):
-    return (epoch - epoch.mean()) / epoch.var()
+    result = (epoch - epoch.mean(axis=0)) / (np.sqrt(epoch.var(axis=0)))
+    return result
 
 def normalization(epochs):
     """ Normalizes each epoch e s.t mean(e)=mean and var(e)=variance
@@ -92,10 +92,8 @@ def normalization(epochs):
             epochs_n - mne data structure of normalized epochs (mean=0, var=1)
     """
     for i in range(epochs.shape[0]):
-        epochs[i,:,:] = _normalize(epochs[i,:,:])
-
-    print(f"mean: {epochs.mean()}")
-    print(f"variance: {epochs.var()}")
+        for j in range(epochs.shape[1]):
+            epochs[i,j,:] = _normalize(epochs[i,j,:])
 
     return epochs
 
