@@ -7,6 +7,7 @@ This implementation is based on the [paper](https://arxiv.org/pdf/1911.05419.pdf
 --add more description about program here
 # Directories
 * `experiments` : Improvement experiments folder
+* `images` : Folder for images for README and results
 * `model` : Folder for model scripts
 * `preprocessing` : Folder for preprocessing scripts
 * `ssl` : Folder for SSL scripts
