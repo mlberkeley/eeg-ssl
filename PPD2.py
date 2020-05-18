@@ -99,7 +99,7 @@ def normalization(epochs):
 
 
 def PPD2(data_file, SAMPLE_TIME, CHANNELS):
-    """ Runs the whole pipeline and returs NumPy data array"""
+    """ Runs the whole pipeline and returns NumPy data array"""
     SAMPLE_TIME = 30
     CHANNELS = ['EEG Fpz-Cz', 'EEG Pz-Oz']
 
