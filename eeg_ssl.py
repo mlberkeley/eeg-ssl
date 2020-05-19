@@ -1,5 +1,5 @@
-from preprocessing import preprocess
-from SSL_create_TS_RP import create
+from preprocessing.preprocessing import preprocess
+from ssl.SSL_create_TS_RP import create
 import sys
 
 
