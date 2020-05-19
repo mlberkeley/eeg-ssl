@@ -27,3 +27,5 @@ if __name__ == '__main__':
     T_pos_TS = sys.argv[2]
     T_neg_TS = sys.argv[3]
     eeg_ssl(data_folder, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS)
+
+# AC :)

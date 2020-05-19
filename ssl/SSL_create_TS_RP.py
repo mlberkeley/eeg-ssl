@@ -1,13 +1,8 @@
 import os
 import numpy as np
-import pandas as pd
-import mne
-import pickle
-import random
 import sys
 from os import listdir
 from os.path import isfile, join
-from mne import preprocessing
 
 from ssl.SSL_TS_RP import temporal_shuffling, relative_positioning
 

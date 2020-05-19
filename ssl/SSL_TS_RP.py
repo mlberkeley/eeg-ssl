@@ -1,10 +1,5 @@
-import os
 import numpy as np
-import pandas as pd
-import mne
-import pickle
 import random
-from mne import preprocessing
 
 
 def temporal_shuffling(epochs, T_pos, T_neg):

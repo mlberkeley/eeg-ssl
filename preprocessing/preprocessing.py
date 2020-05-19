@@ -1,11 +1,9 @@
 import os
 import numpy as np
-import pandas as pd
 import mne
-import pickle
-import random
 from mne import preprocessing
 import sys
+
 
 def preprocess(data_folder):
     """ Runs the whole pipeline and returns NumPy data array"""
