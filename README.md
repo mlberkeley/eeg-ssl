@@ -13,17 +13,28 @@ This implementation is based on the [paper](https://arxiv.org/pdf/1911.05419.pdf
 * `ssl` : Folder for SSL scripts
 
 # Installation and tutorial
-## Dependencies
+
 
 ## Installation
 ```sh
 $ python eeg_ssl.py data_folder T_pos_RP T_neg_RP T_pos_TS T_neg_TS
 ```
+Inputs
 - data_folder: a folder containing EEG .edf files
 - T_pos_RP: an integer representing the positive limit for relative positioning.
 - T_neg_RP: an integer representing the negative limit for relative positioning.
 - T_pos_TS: an integer representing the positive limit for temporal shuffling.
 - T_neg_TS: an integer representing the negative limit for temporal shuffling.
+
+Outputs
+- RP_dataset: pairs of 30 second normalized EEG time windows
+- RP_labels: 
+  - +1 if the distance between the two windows is T_pos_RP
+  - -1 if the distance between the two windows is T_neg_RP
+- TS_dataset:  triples of 30 second normalized EEG time windows
+- TS_labels:
+  - +1 if the distance between the two windows is T_pos_TS
+  - -1 if the distance between the two windows is T_neg_TS
 
 
 
