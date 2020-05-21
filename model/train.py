@@ -1,10 +1,3 @@
-import torch
-from torch import nn
-import numpy as np
-from torch.utils import data
-from torch import optim
-import torch.nn.functional as F
-
 class EEG_FeatureExtractor(nn.Module):
 	# based on "A deep learning architecture for temporal sleep stage
 	# 					classification using multivariate and multimodal time series"
