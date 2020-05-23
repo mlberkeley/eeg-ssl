@@ -1,14 +1,11 @@
 import torch
 from torch import nn
 import numpy as np
-from torch.utils import data
-from torch import optim
-import torch.nn.functional as F
 
 class EEG_FeatureExtractor(nn.Module):
-	# based on "A deep learning architecture for temporal sleep stage
-	# 					classification using multivariate and multimodal time series"
-	
+    # based on "A deep learning architecture for temporal sleep stage
+    # classification using multivariate and multimodal time series"
+
   def __init__(self, C, T, k=50, m=13, dropout_prob=0.5, embedding_dim=100, n_spatial_filters=8):
     """
     C: number of EEG channels
@@ -21,7 +18,7 @@ class EEG_FeatureExtractor(nn.Module):
     # input is (1, C, T) <-- notation (channels, dim1, dim2) is different than paper (dim1, dim2, channels)
     super().__init__()
     self.depthwise_conv = nn.Conv2d(in_channels=1, out_channels=C, kernel_size=(C,1))
-    self.spatial_padding = torch.nn.ReflectionPad2d((int(np.floor((k-1)/2)),int(np.ceil((k-1)/2)),0,0))
+    self.spatial_padding = nn.ReflectionPad2d((int(np.floor((k-1)/2)),int(np.ceil((k-1)/2)),0,0))
     self.spatialwise_conv1 = nn.Conv2d(in_channels=1, out_channels=n_spatial_filters, kernel_size=(1,k))
     self.spatialwise_conv2 = nn.Conv2d(in_channels=n_spatial_filters, out_channels=n_spatial_filters, kernel_size=(1,k))
     self.relu = nn.ReLU(inplace=True)
