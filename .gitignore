@@ -5,3 +5,5 @@
 .DS_Store
 *.ipynb
 *.pyc
+preprocessed.npy
+test/SC4001E0-PSG.edf

@@ -32,8 +32,6 @@ def preprocess(data_folder):
 
             res_array.append([f_epochs, path[:path.index("-")]])
 
-            break
-
             #save(f_epochs, path[:path.index("-")], output_folder)
     
     return res_array
