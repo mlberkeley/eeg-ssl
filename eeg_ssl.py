@@ -1,6 +1,7 @@
 from preprocessing.preprocessing import preprocess
 from ssl.SSL_create_TS_RP import create
 import sys
+import numpy as np
 
 
 def eeg_ssl(data_folder, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS):
@@ -18,7 +19,9 @@ def eeg_ssl(data_folder, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS):
         
      """
      preprocessed = preprocess(data_folder)
-     create(preprocessed, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS)
+     print(preprocessed)
+     np.save("preprocessed.npy", preprocessed)
+     #create(preprocessed, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS)
 
 if __name__ == '__main__':
     data_folder = sys.argv[1]

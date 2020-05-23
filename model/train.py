@@ -1,42 +1,57 @@
-class EEG_FeatureExtractor(nn.Module):
-	# based on "A deep learning architecture for temporal sleep stage
-	# 					classification using multivariate and multimodal time series"
-	
-  def __init__(self, C, T, k=50, m=13, dropout_prob=0.5, embedding_dim=100, n_spatial_filters=8):
-    """
-    C: number of EEG channels
-    T: number of timepoints in a window
-    k: length of spatial filters (i.e. how much you look in time)
-    m: maxpool size
-    n_spatial_filters: number of spatial filters
-    embedding_dim: embedding dimension (D)
-    """
-    # input is (1, C, T) <-- notation (channels, dim1, dim2) is different than paper (dim1, dim2, channels)
-    super().__init__()
-    self.depthwise_conv = nn.Conv2d(in_channels=1, out_channels=C, kernel_size=(C,1))
-    self.spatial_padding = torch.nn.ReflectionPad2d((int(np.floor((k-1)/2)),int(np.ceil((k-1)/2)),0,0))
-    self.spatialwise_conv1 = nn.Conv2d(in_channels=1, out_channels=n_spatial_filters, kernel_size=(1,k))
-    self.spatialwise_conv2 = nn.Conv2d(in_channels=n_spatial_filters, out_channels=n_spatial_filters, kernel_size=(1,k))
-    self.relu = nn.ReLU(inplace=True)
-    self.maxpool = nn.MaxPool2d(kernel_size=(1,m), stride=(1,m))
-    self.dropout = nn.Dropout(p=dropout_prob, inplace=True)
-    self.linear = nn.Linear(n_spatial_filters * C * ((T // m) // m), embedding_dim)
+def train(model, train_loader, optimizer, epoch):
+  model.train()
+  
+  train_losses = []
+  for pair in train_loader:
+    x = pair[0].cuda().contiguous().float()
+    labels = pair[1].cuda().float()
 
-  def forward(self, x):
-    # input is (bs, 1, C, T)
-    bs = x.shape[0]
-    out = x
-    out = self.depthwise_conv(out) # (bs, C, 1, T)
-    out = out.permute(0,2,1,3) # (bs, 1, C, T)
-    out = self.spatial_padding(out)
-    out = self.spatialwise_conv1(out) # (bs, n_spatial_filters, C, T)
-    out = self.relu(out)
-    out = self.maxpool(out) # (bs, n_spatial_filters, C, T // m)
-    out = self.spatial_padding(out)
-    out = self.spatialwise_conv2(out) # (bs, n_spatial_filters, C, T // m)
-    out = self.relu(out)
-    out = self.maxpool(out) # (bs, n_spatial_filters, C, (T // m) // m)
-    out = out.view(bs, -1) # (bs, n_spatial_filters * C * ((T // m) // m))
-    out = self.dropout(out)
-    out = self.linear(out) # (bs, embedding_dim)
-    return out
+    loss = model.loss(x, labels)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    train_losses.append(loss.item())
+  return train_losses
+
+def eval_acc(model, test_loader):
+  with torch.no_grad():
+    model.eval()
+    total_correct = 0.0
+    for pair in test_loader:
+      x = pair[0].cuda().contiguous().float()
+      labels = pair[1].cuda().float()
+      out = F.sigmoid(model(x))
+      out_np = out.cpu().numpy()
+      # technically puts more weight on last batch if it's not divisible by batch size, but whatever
+      total_correct += np.sum(np.round(out_np) == labels.cpu().numpy())
+  return total_correct / len(test_loader.dataset)
+
+def train_epochs(model, train_loader, train_args):
+  epochs, lr, betas = train_args['epochs'], train_args['lr'], train_args['betas']
+  optimizer = optim.Adam(model.parameters(), lr=lr)
+
+  train_losses = []
+  eval_accuracies = []
+  for epoch in range(epochs):
+    model.train()
+    new_train_losses = train(model, train_loader, optimizer, epoch)
+    train_losses.extend(new_train_losses)
+    eval_accuracies.append(eval_acc(model, train_loader))
+
+    print(f'Epoch {epoch}, Train loss {np.mean(new_train_losses):.4f}, Eval Acc: {eval_accuracies[-1]:.4f}')
+
+  return train_losses
+
+def train_rp(pairs_np, labels_np):
+  """
+  Args:
+    pairs_np: (bs, 2, n_channels, T)
+
+  """
+  labels_np_processed = (labels_np+1.0)/2.0 # {-1,1} --> {0,1}
+  dataset = data.TensorDataset(torch.tensor(pairs_np), torch.tensor(labels_np_processed))
+  data_loader = data.DataLoader(dataset, batch_size=32)
+  model = Relative_Positioning(n_channels, n_timepoints).cuda()
+  train_losses = train_epochs(model, data_loader, dict(epochs=10, lr=1e-3,
+                                                       betas=(0.9,0.999)))
+  return train_losses
