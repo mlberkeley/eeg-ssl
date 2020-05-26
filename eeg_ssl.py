@@ -5,7 +5,7 @@ import sys
 import numpy as np
 
 
-def eeg_ssl(data_folder, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS, num_users):
+def eeg_ssl(data_folder, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS, num_users, num_samples):
      """ Divides the mne dataset into many samples of length e_len seconds.
 
      Args:
@@ -19,8 +19,8 @@ def eeg_ssl(data_folder, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS, num_users):
      Returns:
         
      """
-     preprocessed = get_RP_minibatch(data_folder, T_pos_RP, T_neg_RP, num_users)
-    #  preprocessed = preprocess(data_folder)
+     preprocessed = get_RP_minibatch(data_folder, T_pos_RP, T_neg_RP, num_users, num_samples)
+     # preprocessed = preprocess(data_folder)
      print(preprocessed)
      #np.save("preprocessed.npy", preprocessed)
      #create(preprocessed, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS)
@@ -32,6 +32,7 @@ if __name__ == '__main__':
     T_pos_TS = sys.argv[2]
     T_neg_TS = sys.argv[3]
     num_users = sys.argv[4]
-    eeg_ssl(data_folder, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS, num_users)
+    num_samples = sys.argv[5]
+    eeg_ssl(data_folder, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS, num_users, num_samples)
 
 # AC :)

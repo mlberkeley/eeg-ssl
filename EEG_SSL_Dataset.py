@@ -13,7 +13,7 @@ import sys
 from os import listdir
 from os.path import isfile, join
 
-from ssl.SSL_TS_RP import temporal_shuffling, relative_positioning
+from ssl.new_SSL_TS_RP import temporal_shuffling, relative_positioning
 from preprocessing.new_preprocess import preprocess
 
 class EEG_SSL_Dataset():
@@ -32,22 +32,22 @@ class EEG_SSL_Dataset():
 		#self.overlap = overlap
 		self.sampling_freq = sampling_freq
 
-	def get_RP_minibatch(self, data_folder, T_pos_RP, T_neg_RP, num_users):
-		"""
+def get_RP_minibatch(data_folder, T_pos_RP, T_neg_RP, num_users, num_samples):
+	"""
+	
+	"""
+	minibatch_RP = []
+	files = random.sample([f for f in os.listdir(data_folder) if f.endswith("PSG.edf")], int(num_users))
+	for f in files:
+		full_path = os.path.join(data_folder, f)
+		preprocessed = preprocess(full_path)
+		RP_dataset, RP_labels = relative_positioning(preprocessed, int(T_pos_RP), int(T_neg_RP), int(num_samples))
+		minibatch_RP.append((RP_dataset, RP_labels))
 		
-		"""
-		minibatch_RP = []
-		files = random.sample([f for f in os.listdir(data_folder) if f.endswith("PSG.edf")], int(num_users))
-		for f in files:
-			full_path = os.path.join(data_folder, f)
-			preprocessed = preprocess(full_path)
-			RP_dataset, RP_labels = relative_positioning(preprocessed, int(T_pos_RP), int(T_neg_RP))
-			minibatch_RP.append((RP_dataset, RP_labels))
-			
-		return minibatch_RP
+	return minibatch_RP
 
 
-	def get_TS_minibatch(self, data_folder, T_pos_TS, T_neg_TS, num_users):
+	def get_TS_minibatch(self, data_folder, T_pos_TS, T_neg_TS, num_users, num_samples):
 		"""
 		
 		"""
@@ -56,7 +56,7 @@ class EEG_SSL_Dataset():
 		for f in files:
 			full_path = os.path.join(data_folder, f)
 			preprocessed = preprocess(full_path)
-			TS_dataset, TS_labels = temporal_shuffling(preprocessed, int(T_pos_TS), int(T_neg_TS))
+			TS_dataset, TS_labels = temporal_shuffling(preprocessed, int(T_pos_TS), int(T_neg_TS), int(num_samples))
 			minibatch_TS.append((TS_dataset, TS_labels))
 			
 		return minibatch_TS
