@@ -23,7 +23,7 @@ def temporal_shuffling(epochs, T_pos, T_neg):
     TS_dataset = np.empty((total_samples, 3, epochs.shape[1], 3867))
     TS_labels = np.empty((total_samples, 1))
     counter = 0
-   
+
     for idx, sample1 in enumerate(epochs):
         for _ in range(3): # T_pos loop
             sample2_index = np.random.randint(max(idx-T_pos, 0), min(idx+T_pos, epochs.shape[0]-1))

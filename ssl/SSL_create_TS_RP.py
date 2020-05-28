@@ -35,7 +35,7 @@ def create(preprocessed, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS):
         if not os.path.isdir("SSL_RP/RP_dataset") or not os.path.isdir("SSL_TS/TS_labels"):
             os.makedirs("SSL_TS/TS_dataset")
             os.makedirs("SSL_TS/TS_labels")
-        
+
         # temporal_shuffling(data, T_pos, T_neg):
         TS_dataset, TS_labels = temporal_shuffling(epoch_data, T_pos_TS, T_neg_TS)
 
@@ -49,10 +49,10 @@ def create(preprocessed, T_pos_RP, T_neg_RP, T_pos_TS, T_neg_TS):
         if not os.path.isdir("SSL_RP/RP_dataset") or not os.path.isdir("SSL_RP/RP_labels"):
             os.makedirs("SSL_RP/RP_dataset")
             os.makedirs("SSL_RP/RP_labels")
-        
+
         ### relative_positioning(data, T_pos, T_neg):
         RP_dataset, RP_labels = relative_positioning(epoch_data, T_pos_RP, T_neg_RP)
-        
+
         # Save Dataset
         np.save('SSL_RP/RP_dataset/' + file_name, RP_dataset)
         np.save('SSL_RP/RP_labels/' + file_name, RP_labels)
