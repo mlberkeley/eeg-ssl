@@ -34,10 +34,12 @@ class EEG_SSL_Dataset(Dataset):
 
 		"""
         ### determine where we will be sampling from the index
-        file_num = self.preprocess[idx//(len (self.preprocessed))]
-        file_epoch = file_num[idx % len(self.preprocessed)]
+        sub_idx = idx//6
 
-        file_option = file_epoch[]
+        file_num = self.preprocess[sub_idx//(len (self.preprocessed))]
+        file_epoch = file_num[sub_idx % len(self.preprocessed)]
+
+        file_option = idx % 6
 
         ### Sampling with the numbers
         f = self.preprocessed[file_num][file_epoch]
