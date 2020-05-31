@@ -55,34 +55,30 @@ class EEG_SSL_Dataset(Dataset):
 
         ### Sampling with the indexes
         f = self.preprocessed[file_idx]
-        RP_dataset, RP_labels = self.relative_positioning(f, epoch_idx)
+        RP_dataset, RP_labels = self.relative_positioning(f, epoch_idx, sample_idx)
         RP_dataset = RP_dataset[sample_idx]
         RP_labels = RP_labels[sample_idx]
 
-        return RP_labels, RP_labels
+        return RP_dataset, RP_labels
 
 
-    def get_batch(self):
-        # minibatch_TS = []
-        # files = random.sample(self.files, int(num_users))
-        # for f in files:
-        #     full_path = os.path.join(data_folder, f)
+    def get_batch(self, batch_size):
+        minibatch_RP = []
+        maxRange = self.num_files * self.num_epochs * 6
+        files = random.sample(range(maxRange), batch_size)
+        for idx in files:
+            RP_dataset, RP_labels = self.__getitem__(idx)
+            minibatch_RP.append((RP_dataset, RP_labels))
 
-        #     TS_dataset, TS_labels = temporal_shuffling(preprocessed)
-        #     minibatch_TS.append((TS_dataset, TS_labels))
-
-        # return minibatch_TS
-        return None
+        return minibatch_RP
     
-    def relative_positioning(self, epochs, idx):
+    def relative_positioning(self, epochs, epoch_idx, sample_idx):
         """ Builds a self-supervised (relative positioning) dataset of epochs
-
         Args:
             epochs - Numpy datset of time-series arrays
             self.T_pos - positive context to sample from
             self.T_neg - negative context to sample from
             num_samples - int representing number of epochs to sample
-
         Output:
             TS_dataset - Temporal Shuffling Dataset of dimensions (L, 3, s, c)
                 L - # of samples = # of user * # of epochs per user * 6
@@ -93,47 +89,35 @@ class EEG_SSL_Dataset(Dataset):
                 for each y = {1: if |sample1-sample2| < self.T_pos and -1: if |sample1-sample2| > self.T_neg}
         """
         np.random.seed(0)
-        total_samples = self.num_samples
-        RP_dataset = np.empty((6, 2, epochs.shape[1], 3867))   #why 6?
-        RP_labels = np.empty((6, 1))
+        RP_dataset = np.empty((1, 2, epochs.shape[1], 3867))
+        RP_labels = np.empty((1, 1))
         counter = 0
-
-        #select random epoch and get index
-        print("\n\n\n EPOCHS:")
-        print(epochs)
-
-
-        sample1 = epochs[idx]
-        for _ in range(3): # Loop for self.T_pos
-            sample2_index = np.random.randint(max(idx-self.T_pos, 0), min(idx+self.T_pos, epochs.shape[0]-1))
-            while sample2_index == idx: # should not be the same
-                sample2_index = np.random.randint(max(idx-self.T_pos, 0), min(idx+self.T_pos, epochs.shape[0]-1))
+        sample1 = epochs[epoch_idx]
+        if sample_idx <= 2: # self.T_pos loop
+            np.random.seed(sample_idx)
+            sample2_index = np.random.randint(max(epoch_idx-self.T_pos, 0), min(epoch_idx+self.T_pos, epochs.shape[0]-1))
+            while sample2_index == epoch_idx: # should not be the same
+                sample2_index = np.random.randint(max(epoch_idx-self.T_pos, 0), min(epoch_idx+self.T_pos, epochs.shape[0]-1))
             sample2 = epochs[sample2_index]
-
             y = 1
-
-
             RP_sample = np.array([sample1, sample2])
             RP_dataset[counter] = RP_sample
             RP_labels[counter] = y
             counter += 1
-
-        for _ in range(3): # Loop for self.T_neg
-            if idx-self.T_neg <= 0: # self.T_neg if (corners)
-                sample2_index = np.random.randint(idx+self.T_neg, epochs.shape[0])
-            elif idx+self.T_neg >= epochs.shape[0]: # take care of low == high
-                sample2_index = np.random.randint(0, idx-self.T_neg)
+        else: # Loop for self.T_neg
+            np.random.seed(sample_idx)
+            if epoch_idx-self.T_neg <= 0: # self.T_neg if (corners)
+                sample2_index = np.random.randint(epoch_idx+self.T_neg, epochs.shape[0])
+            elif epoch_idx+self.T_neg >= epochs.shape[0]: # take care of low == high
+                sample2_index = np.random.randint(0, epoch_idx-self.T_neg)
             else:
-                sample2_index_1 = np.random.randint(idx+self.T_neg, epochs.shape[0])
-                sample2_index_2 = np.random.randint(0, idx-self.T_neg)
+                sample2_index_1 = np.random.randint(epoch_idx+self.T_neg, epochs.shape[0])
+                sample2_index_2 = np.random.randint(0, epoch_idx-self.T_neg)
                 sample2_index = list([sample2_index_1, sample2_index_2])[int(random.uniform(0,1))]
             sample2 = epochs[sample2_index]
-
             y = -1
-
             RP_sample = np.array([sample1, sample2])
             RP_dataset[counter] = RP_sample
             RP_labels[counter] = y
             counter += 1
-
         return RP_dataset, RP_labels
