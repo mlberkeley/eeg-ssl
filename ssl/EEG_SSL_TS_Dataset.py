@@ -64,8 +64,6 @@ class EEG_SSL_Dataset(Dataset):
         ### Sampling with the indexes
 		f = self.preprocesseded[file_idx]
 		TS_dataset, TS_labels = temporal_shuffling(f, epoch_idx, sample_idx)
-		TS_dataset = TS_dataset[sample_idx]
-		TS_labels = TS_labels[sample_idx]
 
 		return TS_labels, TS_labels
 
@@ -143,7 +141,7 @@ class EEG_SSL_Dataset(Dataset):
         else: # self.T_neg loop
 
 			np.random.seed(sample_idx)
-			
+
             sample2_index = np.random.randint(max(idx-self.T_pos, 0), min(idx+self.T_pos, epochs.shape[0]-1))
             while sample2_index == idx: # should not be the same
                 sample2_index = np.random.randint(max(idx-self.T_pos, 0), min(idx+self.T_pos, epochs.shape[0]-1))
