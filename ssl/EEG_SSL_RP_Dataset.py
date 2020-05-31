@@ -19,95 +19,88 @@ from torchvision import transforms, utils
 import warnings
 warnings.filterwarnings("ignore")
 
-from ssl.new_SSL_TS_RP import temporal_shuffling, relative_positioning
+#from ssl.new_SSL_TS_RP import temporal_shuffling, relative_positioning
 from preprocessing.new_preprocess import preprocess
 
 
 class EEG_SSL_Dataset(Dataset):
 
-	def __init__(self, data_folder, T_pos, T_neg,\
-	 			sampling_freq=100, window_length=30, predict_delay=60, batch_size=128):
-
-		self.data_folder = data_folder
-		self.T_pos = int(T_pos)
-		self.T_neg = int(T_neg)
-		self.batch_size = batch_size
-		self.window_length = window_length
-		self.predict_delay = predict_delay
-		self.sampling_freq = sampling_freq
-		self.files = [f for f in os.listdir(data_folder) if f.endswith("PSG.edf")]
+    def __init__(self, data_folder, T_pos, T_neg, sampling_freq=100, window_length=30, predict_delay=60, batch_size=128):
+        self.data_folder = data_folder
+        self.T_pos = int(T_pos)
+        self.T_neg = int(T_neg)
+        self.batch_size = batch_size
+        self.window_length = window_length
+        self.predict_delay = predict_delay
+        self.sampling_freq = sampling_freq
+        self.files = [f for f in os.listdir(data_folder) if f.endswith("PSG.edf")]
         self.preprocessed = []
         for f in self.files:
             full_path = os.path.join(data_folder, f)
             pp_file = preprocess(full_path)
             self.preprocessed.append(pp_file)
 
-        TS_dataset, TS_labels = temporal_shuffling(pp_file)
         self.num_files = len(self.files)
-		self.num_epochs = TS_dataset.shape[0]
+        self.num_epochs = len(self.preprocessed[0])
         self.num_samples = 6
 
-	def __len__(self):
+    def __len__(self):
         return self.num_files * self.num_epochs * self.num_samples
 
 
-	def __getitem__(self, idx):
-		"""
-
-		"""
-        ### determine where we will be sampling from the index
-        file_idx = idx // 6
-        epoch_idx = sub_idx // num_epochs
+    def __getitem__(self, idx):
+        file_idx = (idx // 6) // self.num_epochs
+        epoch_idx = (idx // 6) % self.num_epochs
         sample_idx = idx % 6
 
         ### Sampling with the indexes
-        f = self.preprocesseded[file_idx]
-        TS_dataset, TS_labels = temporal_shuffling(f, epoch_idx)
-        TS_dataset = TS_dataset[sample_idx]
-        TS_labels = TS_labels[sample_idx]
+        f = self.preprocessed[file_idx]
+        RP_dataset, RP_labels = self.relative_positioning(f, epoch_idx)
+        RP_dataset = RP_dataset[sample_idx]
+        RP_labels = RP_labels[sample_idx]
 
-        return TS_labels, TS_labels
-
-
-	def get_batch():
-		minibatch_TS = []
-		files = random.sample(self.files, int(num_users))
-		for f in files:
-			full_path = os.path.join(data_folder, f)
-
-			TS_dataset, TS_labels = temporal_shuffling(preprocessed)
-			minibatch_TS.append((TS_dataset, TS_labels))
-
-		return minibatch_TS
+        return RP_labels, RP_labels
 
 
-	def relative_positioning(epochs, self.T_pos, self.T_neg, num_samples):
-	    """ Builds a self-supervised (relative positioning) dataset of epochs
+    def get_batch(self):
+        # minibatch_TS = []
+        # files = random.sample(self.files, int(num_users))
+        # for f in files:
+        #     full_path = os.path.join(data_folder, f)
 
-	    Args:
-	        epochs - Numpy datset of time-series arrays
-	        self.T_pos - positive context to sample from
-	        self.T_neg - negative context to sample from
-	        num_samples - int representing number of epochs to sample
+        #     TS_dataset, TS_labels = temporal_shuffling(preprocessed)
+        #     minibatch_TS.append((TS_dataset, TS_labels))
 
-	    Output:
-	        TS_dataset - Temporal Shuffling Dataset of dimensions (L, 3, s, c)
-	            L - # of samples = # of user * # of epochs per user * 6
-	            2 - sample1 + sample2
-	            s - # of eeg channels in each sample
-	            c - Samples per channel = 30s * 128Hz
-	        TS_labels - Temporal Shuffling labels of dimensions (1, L)
-	            for each y = {1: if |sample1-sample2| < self.T_pos and -1: if |sample1-sample2| > self.T_neg}
-	    """
+        # return minibatch_TS
+        return None
+    
+    def relative_positioning(self, epochs, idx):
+        """ Builds a self-supervised (relative positioning) dataset of epochs
+
+        Args:
+            epochs - Numpy datset of time-series arrays
+            self.T_pos - positive context to sample from
+            self.T_neg - negative context to sample from
+            num_samples - int representing number of epochs to sample
+
+        Output:
+            TS_dataset - Temporal Shuffling Dataset of dimensions (L, 3, s, c)
+                L - # of samples = # of user * # of epochs per user * 6
+                2 - sample1 + sample2
+                s - # of eeg channels in each sample
+                c - Samples per channel = 30s * 128Hz
+            TS_labels - Temporal Shuffling labels of dimensions (1, L)
+                for each y = {1: if |sample1-sample2| < self.T_pos and -1: if |sample1-sample2| > self.T_neg}
+        """
         np.random.seed(0)
         total_samples = self.num_samples
-        RP_dataset = np.empty((6, 3, epochs.shape[1], 3867))
+        RP_dataset = np.empty((6, 2, epochs.shape[1], 3867))   #why 6?
         RP_labels = np.empty((6, 1))
         counter = 0
 
-	    #select random epoch and get index
-	    print("\n\n\n EPOCHS:")
-	    print(epochs)
+        #select random epoch and get index
+        print("\n\n\n EPOCHS:")
+        print(epochs)
 
 
         sample1 = epochs[idx]
@@ -118,6 +111,7 @@ class EEG_SSL_Dataset(Dataset):
             sample2 = epochs[sample2_index]
 
             y = 1
+
 
             RP_sample = np.array([sample1, sample2])
             RP_dataset[counter] = RP_sample
@@ -142,4 +136,4 @@ class EEG_SSL_Dataset(Dataset):
             RP_labels[counter] = y
             counter += 1
 
-	    return RP_dataset, RP_label
+        return RP_dataset, RP_labels

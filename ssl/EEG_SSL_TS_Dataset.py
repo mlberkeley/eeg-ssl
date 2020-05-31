@@ -23,20 +23,19 @@ from ssl.new_SSL_TS_RP import temporal_shuffling, relative_positioning
 from preprocessing.new_preprocess import preprocess
 
 
-
 class EEG_SSL_Dataset(Dataset):
 
-	def __init__(self, data_folder, T_pos, T_neg,\
-	 			sampling_freq=100, window_length=30, predict_delay=60, batch_size=128):
+    def __init__(self, data_folder, T_pos, T_neg,\
+                sampling_freq=100, window_length=30, predict_delay=60, batch_size=128):
 
-		self.data_folder = data_folder
-		self.T_pos = int(T_pos)
-		self.T_neg = int(T_neg)
-		self.batch_size = batch_size
-		self.window_length = window_length
-		self.predict_delay = predict_delay
-		self.sampling_freq = sampling_freq
-		self.files = [f for f in os.listdir(data_folder) if f.endswith("PSG.edf")]
+        self.data_folder = data_folder
+        self.T_pos = int(T_pos)
+        self.T_neg = int(T_neg)
+        self.batch_size = batch_size
+        self.window_length = window_length
+        self.predict_delay = predict_delay
+        self.sampling_freq = sampling_freq
+        self.files = [f for f in os.listdir(data_folder) if f.endswith("PSG.edf")]
         self.preprocessed = []
         for f in self.files:
             full_path = os.path.join(data_folder, f)
@@ -45,20 +44,20 @@ class EEG_SSL_Dataset(Dataset):
 
         TS_dataset, TS_labels = temporal_shuffling(pp_file)
         self.num_files = len(self.files)
-		self.num_epochs = TS_dataset.shape[0]
+        self.num_epochs = TS_dataset.shape[0]
         self.num_samples = 6
 
-	def __len__(self):
+    def __len__(self):
         return self.num_files * self.num_epochs * self.num_samples
 
 
-	def __getitem__(self, idx):
-		"""
+    def __getitem__(self, idx):
+        """
 
-		"""
+        """
         ### determine where we will be sampling from the index
-        file_idx = idx // 6
-        epoch_idx = sub_idx // num_epochs
+        file_idx = (idx // 6) // self.num_epochs
+        epoch_idx = (idx // 6) % self.num_epochs
         sample_idx = idx % 6
 
         ### Sampling with the indexes
@@ -70,19 +69,18 @@ class EEG_SSL_Dataset(Dataset):
         return TS_labels, TS_labels
 
 
-	def get_batch():
-		minibatch_TS = []
-		files = random.sample(self.files, int(num_users))
-		for f in files:
-			full_path = os.path.join(data_folder, f)
+    def get_batch():
+        minibatch_TS = []
+        files = random.sample(self.files, int(num_users))
+        for f in files:
+            full_path = os.path.join(data_folder, f)
 
-			TS_dataset, TS_labels = temporal_shuffling(preprocessed)
-			minibatch_TS.append((TS_dataset, TS_labels))
+            TS_dataset, TS_labels = temporal_shuffling(preprocessed)
+            minibatch_TS.append((TS_dataset, TS_labels))
 
-		return minibatch_TS
+        return minibatch_TS
 
-
-    def temporal_shuffling(epochs, idx):
+    def temporal_shuffling(self, epochs, idx):
         """ Builds a self-supervised (temporal shuffling) dataset of epochs
 
         Args:

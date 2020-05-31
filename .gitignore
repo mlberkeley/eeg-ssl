@@ -7,3 +7,5 @@
 *.pyc
 preprocessed.npy
 test/SC4001E0-PSG.edf
+*.edf
+sleep_cassette/SC4652E0.npy
