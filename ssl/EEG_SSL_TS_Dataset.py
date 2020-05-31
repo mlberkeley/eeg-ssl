@@ -43,10 +43,10 @@ class EEG_SSL_Dataset(Dataset):
             pp_file = preprocess(full_path)
             self.preprocessed.append(pp_file)
 
-        TS_dataset, TS_labels = temporal_shuffling(pp_file)
-        self.num_files = len(self.files)
+		TS_dataset, TS_labels = temporal_shuffling(pp_file)
+		self.num_files = len(self.files)
 		self.num_epochs = TS_dataset.shape[0]
-        self.num_samples = 6
+		self.num_samples = 6
 
 	def __len__(self):
         return self.num_files * self.num_epochs * self.num_samples
@@ -57,17 +57,17 @@ class EEG_SSL_Dataset(Dataset):
 
 		"""
         ### determine where we will be sampling from the index
-        file_idx = idx // 6
-        epoch_idx = sub_idx // num_epochs
+        file_idx = (idx // 6) // self.num_epochs
+        epoch_idx = (idx // 6) % self.num_epochs
         sample_idx = idx % 6
 
         ### Sampling with the indexes
-        f = self.preprocesseded[file_idx]
-        TS_dataset, TS_labels = temporal_shuffling(f, epoch_idx)
-        TS_dataset = TS_dataset[sample_idx]
-        TS_labels = TS_labels[sample_idx]
+		f = self.preprocesseded[file_idx]
+		TS_dataset, TS_labels = temporal_shuffling(f, epoch_idx, sample_idx)
+		TS_dataset = TS_dataset[sample_idx]
+		TS_labels = TS_labels[sample_idx]
 
-        return TS_labels, TS_labels
+		return TS_labels, TS_labels
 
 
 	def get_batch():
@@ -82,7 +82,7 @@ class EEG_SSL_Dataset(Dataset):
 		return minibatch_TS
 
 
-    def temporal_shuffling(epochs, idx):
+    def temporal_shuffling(epochs, idx, sample_idx):
         """ Builds a self-supervised (temporal shuffling) dataset of epochs
 
         Args:
@@ -107,33 +107,43 @@ class EEG_SSL_Dataset(Dataset):
         counter = 0
 
         sample1 = epochs[idx]
-        for _ in range(3): # self.T_pos loop
-            sample2_index = np.random.randint(max(idx-self.T_pos, 0), min(idx+self.T_pos, epochs.shape[0]-1))
-            while sample2_index == idx: # should not be the same
-                sample2_index = np.random.randint(max(idx-self.T_pos, 0), min(idx+self.T_pos, epochs.shape[0]-1))
-            sample2 = epochs[sample2_index]
 
-            if idx-self.T_neg <= 0: # self.T_neg if (corners)
-                sample3_index = np.random.randint(idx+self.T_neg, epochs.shape[0])
-            elif idx+self.T_neg >= epochs.shape[0]: # take care of low == high
-                sample3_index = np.random.randint(0, idx-self.T_neg)
-            else:
-                sample3_index_1 = np.random.randint(idx+self.T_neg, epochs.shape[0])
-                sample3_index_2 = np.random.randint(0, idx-self.T_neg)
-                sample3_index = list([sample3_index_1, sample3_index_2])[int(random.uniform(0,1))]
-            sample3 = epochs[sample3_index]
 
-            if idx < sample2_index and sample2_index < sample3_index:
-                y = 1
-            else:
-                y = -1
 
-            TS_sample = np.array([sample1, sample2, sample3])
-            TS_dataset[counter] = TS_sample
-            TS_labels[counter] = y
-            counter += 1
+        if sample_idx <= 3: # self.T_pos loop
 
-        for _ in range(3): # self.T_neg loop
+			np.random.seed(sample_idx)
+
+
+		    sample2_index = np.random.randint(max(idx-self.T_pos, 0), min(idx+self.T_pos, epochs.shape[0]-1))
+		    while sample2_index == idx: # should not be the same
+		        sample2_index = np.random.randint(max(idx-self.T_pos, 0), min(idx+self.T_pos, epochs.shape[0]-1))
+		    sample2 = epochs[sample2_index]
+
+		    if idx-self.T_neg <= 0: # self.T_neg if (corners)
+		        sample3_index = np.random.randint(idx+self.T_neg, epochs.shape[0])
+		    elif idx+self.T_neg >= epochs.shape[0]: # take care of low == high
+		        sample3_index = np.random.randint(0, idx-self.T_neg)
+		    else:
+		        sample3_index_1 = np.random.randint(idx+self.T_neg, epochs.shape[0])
+		        sample3_index_2 = np.random.randint(0, idx-self.T_neg)
+		        sample3_index = list([sample3_index_1, sample3_index_2])[int(random.uniform(0,1))]
+		    sample3 = epochs[sample3_index]
+
+		    if idx < sample2_index and sample2_index < sample3_index:
+		        y = 1
+		    else:
+		        y = -1
+
+		    TS_sample = np.array([sample1, sample2, sample3])
+		    TS_dataset[counter] = TS_sample
+		    TS_labels[counter] = y
+		    counter += 1
+
+        else: # self.T_neg loop
+
+			np.random.seed(sample_idx)
+			
             sample2_index = np.random.randint(max(idx-self.T_pos, 0), min(idx+self.T_pos, epochs.shape[0]-1))
             while sample2_index == idx: # should not be the same
                 sample2_index = np.random.randint(max(idx-self.T_pos, 0), min(idx+self.T_pos, epochs.shape[0]-1))
