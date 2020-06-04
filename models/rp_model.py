@@ -1,3 +1,7 @@
+import torch
+from torch import nn
+from .feature_extractor import EEG_FeatureExtractor
+
 class Relative_Positioning(nn.Module):
   def __init__(self, C, T, k=50, m=13, dropout_prob=0.5, embedding_dim=100, n_spatial_filters=8):
     super().__init__()
