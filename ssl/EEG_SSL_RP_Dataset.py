@@ -20,7 +20,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 #from ssl.new_SSL_TS_RP import temporal_shuffling, relative_positioning
-from preprocessing.new_preprocess import preprocess
+from .preprocessing.new_preprocess import preprocess
 
 
 class EEG_SSL_Dataset(Dataset):
