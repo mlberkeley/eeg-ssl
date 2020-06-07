@@ -3,23 +3,30 @@ import numpy as np
 import mne
 from mne import preprocessing
 import sys
+import time
 
+def print_time(f, *args):
+  print("time for: " + f.__name__)
+  start_time = time.time()
+  return_val = f(*args)
+  print(time.time() - start_time)
+  return return_val
 
 def preprocess(file):
     """ Runs the whole pipeline and returns NumPy data array"""
     epoch_length = 30 # s
     CHANNELS = ['EEG Fpz-Cz', 'EEG Pz-Oz']
     
-    raw = mne.io.read_raw_edf(file, preload=True)
-    mne_eeg = remove_sleepEDF(raw, CHANNELS)
-    mne_filtered = filter_eeg(mne_eeg, CHANNELS)
-    epochs = divide_epochs(mne_filtered, epoch_length)
+    raw = print_time(mne.io.read_raw_edfm file, preload=True)
+    mne_eeg = print_time(remove_sleepEDF,raw, CHANNELS)
+    mne_filtered = print_time(filter_eeg,mne_eeg, CHANNELS)
+    epochs = print_time(divide_epochs,mne_filtered, epoch_length)
     
-    # epochs = downsample(epochs, CHANNELS) [it's already at 100 Hz]
+    # epochs = print_time(downsample(epochs, CHANNELS) [it's already at 100 Hz]
 
-    epochs = epochs.get_data() # turns into NumPy Array
+    epochs = print_time(epochs.get_data) # turns into NumPy Array
 
-    f_epochs = normalization(epochs) # should update this
+    f_epochs = print_time(normalization,epochs) # should update this
 
     #np.save(file[:file.index("-")], f_epochs)
     
