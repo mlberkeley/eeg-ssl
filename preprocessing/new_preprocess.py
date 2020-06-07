@@ -5,31 +5,21 @@ from mne import preprocessing
 import sys
 import time
 
-def print_time(f, *args):
-  print("time for: " + f.__name__)
-  start_time = time.time()
-  return_val = f(*args)
-  print(time.time() - start_time)
-  return return_val
-
 def preprocess(file):
     """ Runs the whole pipeline and returns NumPy data array"""
     epoch_length = 30 # s
     CHANNELS = ['EEG Fpz-Cz', 'EEG Pz-Oz']
     
-    def a():
-        return mne.io.read_raw_edf(file, preload=True)
-
-    raw = print_time(a)
-    mne_eeg = print_time(remove_sleepEDF,raw, CHANNELS)
-    mne_filtered = print_time(filter_eeg,mne_eeg, CHANNELS)
-    epochs = print_time(divide_epochs,mne_filtered, epoch_length)
+    raw = mne.io.read_raw_edf(file, preload=True)
+    mne_eeg = remove_sleepEDF(raw, CHANNELS)
+    mne_filtered = filter_eeg(mne_eeg, CHANNELS)
+    epochs = divide_epochs(mne_filtered, epoch_length)
     
-    # epochs = print_time(downsample(epochs, CHANNELS) [it's already at 100 Hz]
+    # epochs = downsample(epochs, CHANNELS) [it's already at 100 Hz]
 
-    epochs = print_time(epochs.get_data) # turns into NumPy Array
+    epochs = epochs.get_data() # turns into NumPy Array
 
-    f_epochs = print_time(normalization,epochs) # should update this
+    f_epochs = normalization(epochs) # should update this
 
     #np.save(file[:file.index("-")], f_epochs)
     
@@ -45,7 +35,7 @@ def remove_sleepEDF(mne_raw, channels):
     Returns:
     extracted - mne data structure with only specified channels
     """
-    extracted = mne_raw.pick_channels(channels)
+    extracted = mne_raw.pick_channels(channels, verbose='ERROR')
     return extracted
 
 def filter_eeg(mne_eeg, channels):
@@ -63,7 +53,7 @@ def filter_eeg(mne_eeg, channels):
             picks = channels,
             filter_length = "auto",
             method = "fir",
-            verbose='WARNING'
+            verbose='ERROR'
             )
     return filtered
 
@@ -103,7 +93,7 @@ def divide_epochs(raw, e_len):
     if raw.times[-1] >= e_len:
         events = _create_events(raw, e_len)
 
-    epochs = mne.Epochs(raw, events=events, tmax=e_len, preload=True)
+    epochs = mne.Epochs(raw, events=events, tmax=e_len, preload=True, verbose='ERROR')
     return epochs
 
 def downsample(epochs, chs, Hz=128):
@@ -117,7 +107,7 @@ def downsample(epochs, chs, Hz=128):
         Returns
             E: a mne data structure sampled at a rate r of 128 Hz.
     """
-    E = epochs.pick_types(eeg=True, selection=chs, verbose='WARNING')
+    E = epochs.pick_types(eeg=True, selection=chs, verbose='ERROR')
     E = E.resample(Hz, npad='auto')
     return E
 

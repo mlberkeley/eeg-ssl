@@ -6,6 +6,7 @@ import numpy as np
 import sys
 from os import listdir
 from os.path import isfile, join
+from tqdm import tqdm
 
 import torch
 import pandas as pd
@@ -24,7 +25,6 @@ from eegssl.preprocessing.new_preprocess import preprocess
 
 
 class EEG_SSL_Dataset(Dataset):
-
     def __init__(self, data_folder, T_pos, T_neg, sampling_freq=100, window_length=30, predict_delay=60, batch_size=128):
         self.data_folder = data_folder
         self.T_pos = int(T_pos)
@@ -35,7 +35,7 @@ class EEG_SSL_Dataset(Dataset):
         self.sampling_freq = sampling_freq
         self.files = [f for f in os.listdir(data_folder) if f.endswith("PSG.edf")]
         self.preprocessed = []
-        for f in self.files:
+        for f in tqdm(self.files):
             full_path = os.path.join(data_folder, f)
             pp_file = preprocess(full_path)
             self.preprocessed.append(pp_file)
@@ -46,7 +46,6 @@ class EEG_SSL_Dataset(Dataset):
 
     def __len__(self):
         return self.num_files * self.num_epochs * self.num_samples
-
 
     def __getitem__(self, idx):
         file_idx = (idx // 6) // self.num_epochs
