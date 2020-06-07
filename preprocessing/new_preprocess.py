@@ -7,42 +7,39 @@ import sys
 
 def preprocess(file):
     """ Runs the whole pipeline and returns NumPy data array"""
-    SAMPLE_TIME = 30
+    epoch_length = 30 # s
     CHANNELS = ['EEG Fpz-Cz', 'EEG Pz-Oz']
     
     raw = mne.io.read_raw_edf(file, preload=True)
-
     mne_eeg = remove_sleepEDF(raw, CHANNELS)
+    mne_filtered = filter_eeg(mne_eeg, CHANNELS)
+    epochs = divide_epochs(mne_filtered, epoch_length)
     
-    mne_filtered = filter(mne_eeg, CHANNELS)
-    
-    epochs = divide_epochs(mne_filtered, SAMPLE_TIME)
-    
-    epochs = downsample(epochs, CHANNELS)
+    # epochs = downsample(epochs, CHANNELS) [it's already at 100 Hz]
 
     epochs = epochs.get_data() # turns into NumPy Array
 
-    f_epochs = normalization(epochs)
+    f_epochs = normalization(epochs) # should update this
 
     #np.save(file[:file.index("-")], f_epochs)
     
     return f_epochs
 
-def remove_sleepEDF(mne_raw, CHANNELS):
+def remove_sleepEDF(mne_raw, channels):
     """Extracts CHANNELS channels from MNE_RAW data.
 
     Args:
     raw - mne data strucutre of n number of recordings and t seconds each
-    CHANNELS - channels wished to be extracted
+    channels - channels wished to be extracted
 
     Returns:
     extracted - mne data structure with only specified channels
     """
-    extracted = mne_raw.pick_channels(CHANNELS)
+    extracted = mne_raw.pick_channels(channels)
     return extracted
 
-def filter(mne_eeg, chs):
-    """Creates a 30 Hz 4th-order FIR lowpass filter that is applied to the CHS channels from the MNE_EEG data.
+def filter_eeg(mne_eeg, channels):
+    """Creates a 30 Hz 4th-order FIR lowpass filter that is applied to the channels channels from the MNE_EEG data.
 
     Args:
         mne-eeg - mne data strucutre of n number of recordings and t seconds each
@@ -53,9 +50,10 @@ def filter(mne_eeg, chs):
     
     filtered = mne_eeg.filter(l_freq=None,
             h_freq= 30,
-            picks = chs,
+            picks = channels,
             filter_length = "auto",
-            method = "fir"
+            method = "fir",
+            verbose='WARNING'
             )
     return filtered
 
@@ -74,11 +72,11 @@ def _create_events(raw, epoch_length):
     sfreq = raw.info['sfreq']
     n_samp_in_epoch = int(epoch_length * sfreq)
 
-    n_epochs = int(file_length // n_samp_in_epoch)
+    n_epochs = file_length // n_samp_in_epoch
 
     events = []
     for i_epoch in range(n_epochs):
-        events.append([first_samp + i_epoch * n_samp_in_epoch, int(0), int(0)])
+        events.append([first_samp + i_epoch * n_samp_in_epoch, 0, 0])
     events = np.array(events)
     return events
 
@@ -109,7 +107,7 @@ def downsample(epochs, chs, Hz=128):
         Returns
             E: a mne data structure sampled at a rate r of 128 Hz.
     """
-    E = epochs.pick_types(eeg=True, selection=chs)
+    E = epochs.pick_types(eeg=True, selection=chs, verbose='WARNING')
     E = E.resample(Hz, npad='auto')
     return E
 
