@@ -35,7 +35,7 @@ def remove_sleepEDF(mne_raw, channels):
     Returns:
     extracted - mne data structure with only specified channels
     """
-    extracted = mne_raw.pick_channels(channels, verbose='ERROR')
+    extracted = mne_raw.pick_channels(channels)
     return extracted
 
 def filter_eeg(mne_eeg, channels):
