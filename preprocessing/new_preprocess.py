@@ -10,7 +10,7 @@ def preprocess(f):
     epoch_length = 30 # s
     CHANNELS = ['EEG Fpz-Cz', 'EEG Pz-Oz']
     
-    raw = mne.io.read_raw_edf(f, preload=True)
+    raw = mne.io.read_raw_edf(f, preload=True, verbose='ERROR')
     mne_eeg = remove_sleepEDF(raw, CHANNELS)
     mne_filtered = filter_eeg(mne_eeg, CHANNELS)
     epochs = divide_epochs(mne_filtered, epoch_length)
