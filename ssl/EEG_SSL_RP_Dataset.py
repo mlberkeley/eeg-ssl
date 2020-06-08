@@ -50,10 +50,10 @@ class EEG_SSL_Dataset(Dataset):
                 pp_file = preprocess(full_path)
                 self.preprocessed.append(pp_file)
             if save_preprocessed_path is not None:
-                pickle.dump(self.preprocessed, open(save_preprocessed_path, 'wb'))
+                pickle.dump((self.preprocessed, self.files), open(save_preprocessed_path, 'wb'))
 
         elif preprocessed_file is not None:
-            self.preprocessed = pickle.load(open(preprocessed_file, 'rb'))
+            self.preprocessed, self.files = pickle.load(open(preprocessed_file, 'rb'))
 
         self.num_files = len(self.files)
         self.num_epochs = len(self.preprocessed) # TODO: this varies depending on the file
