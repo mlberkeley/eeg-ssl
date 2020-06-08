@@ -70,8 +70,6 @@ class EEG_SSL_Dataset(Dataset):
         ### Sampling with the indexes
         f = self.preprocessed[file_idx]
         RP_dataset, RP_labels = self.relative_positioning(f, epoch_idx, sample_idx)
-        RP_dataset = RP_dataset[sample_idx]
-        RP_labels = RP_labels[sample_idx]
 
         return RP_dataset, RP_labels
 
