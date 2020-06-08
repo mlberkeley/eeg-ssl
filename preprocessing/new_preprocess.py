@@ -67,11 +67,11 @@ def divide_epochs(raw, epoch_length):
     """
 
     raw_np = raw.get_data()
-    s_freq = raw.info['sfreq']
+    s_freq = int(raw.info['sfreq'])
     n_channels, n_time_points = raw_np.shape[0], raw_np.shape[1]
 
-    # make n_time_points a multiple of epoch_length*s_freq
-    chopped_n_time_points = n_time_points - (n_time_points % int(epoch_length*s_freq))
+    # make n_time_points a multiple of epoch_length*s
+    chopped_n_time_points = n_time_points - (n_time_points % (epoch_length*s_freq))
     raw_np = raw_np[:,:chopped_n_time_points]
 
     return raw_np.reshape(n_channels, epoch_length*s_freq)
