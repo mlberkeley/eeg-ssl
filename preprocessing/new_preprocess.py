@@ -5,19 +5,17 @@ from mne import preprocessing
 import sys
 import time
 
-def preprocess(file):
+def preprocess(f):
     """ Runs the whole pipeline and returns NumPy data array"""
     epoch_length = 30 # s
     CHANNELS = ['EEG Fpz-Cz', 'EEG Pz-Oz']
     
-    raw = mne.io.read_raw_edf(file, preload=True)
+    raw = mne.io.read_raw_edf(f, preload=True)
     mne_eeg = remove_sleepEDF(raw, CHANNELS)
     mne_filtered = filter_eeg(mne_eeg, CHANNELS)
     epochs = divide_epochs(mne_filtered, epoch_length)
     
     # epochs = downsample(epochs, CHANNELS) [it's already at 100 Hz]
-
-    epochs = epochs.get_data() # turns into NumPy Array
 
     f_epochs = normalization(epochs) # should update this
 
@@ -57,44 +55,25 @@ def filter_eeg(mne_eeg, channels):
             )
     return filtered
 
-def _create_events(raw, epoch_length):
-    """Creates events at the right times split raw into epochs of length epoch_length seconds.
-
-    Args:
-        raw - mne data strucutre of n number of recordings and t seconds each
-        epoch_length - (seconds) the length of each outputting epoch.
-
-    Returns:
-        events - Numpy array of events  of epochs
-    """
-    file_length = raw.n_times
-    first_samp = raw.first_samp
-    sfreq = raw.info['sfreq']
-    n_samp_in_epoch = int(epoch_length * sfreq)
-
-    n_epochs = file_length // n_samp_in_epoch
-
-    events = []
-    for i_epoch in range(n_epochs):
-        events.append([first_samp + i_epoch * n_samp_in_epoch, 0, 0])
-    events = np.array(events)
-    return events
-
-def divide_epochs(raw, e_len):
-    """ Divides the mne dataset into many samples of length e_len seconds.
+def divide_epochs(raw, epoch_length):
+    """ Divides the mne dataset into many samples of length epoch_length seconds.
 
     Args:
         E: mne data structure
-        e_len: (int seconds) length of each sample
+        epoch_length: (int seconds) length of each sample
 
     Returns:
-        epochs: mne data structure of (experiment length * users) / e_len
+        epochs: mne data structure of (experiment length * users) / epoch_length
     """
-    if raw.times[-1] >= e_len:
-        events = _create_events(raw, e_len)
 
-    epochs = mne.Epochs(raw, events=events, tmax=e_len, preload=True, verbose='ERROR')
-    return epochs
+    raw_np = raw.get_data()
+    n_channels, n_time_points = raw_np.shape[0], raw_np.shape[1]
+
+    # make n_time_points a multiple of epoch_length
+    chopped_n_time_points = n_time_points - (n_time_points % epoch_length) 
+    raw_np = raw_np[:,:chopped_n_time_points]
+
+    return raw_np.reshape(n_channels, epoch_length)
 
 def downsample(epochs, chs, Hz=128):
     """ Downsample the EEG epoch to Hz=128 Hz and to only
@@ -132,7 +111,7 @@ def normalization(epochs):
         Returns:
             epochs_n - mne data structure of normalized epochs (mean=0, var=1)
     """
-    for i in range(epochs.shape[0]):
+    for i in range(epochs.shape[0]): # TODO could switch to a 1-line numpy matrix operation
         for j in range(epochs.shape[1]):
             epochs[i,j,:] = _normalize(epochs[i,j,:])
 
