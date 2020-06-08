@@ -23,34 +23,48 @@ warnings.filterwarnings("ignore")
 #from ssl.new_SSL_TS_RP import temporal_shuffling, relative_positioning
 from eegssl.preprocessing.new_preprocess import preprocess
 
-
 class EEG_SSL_Dataset(Dataset):
-    def __init__(self, data_folder, T_pos, T_neg, sampling_freq=100, window_length=30, predict_delay=60, batch_size=128):
-        self.data_folder = data_folder
+    def __init__(self, T_pos, T_neg, raw_data_folder=None, preprocessed_file=None,
+    save_preprocessed_path=None, sampling_freq=100,
+    window_length=30, predict_delay=60, batch_size=128):
+        """
+        Takes in either a data folder or a preprocessed file
+        TODO: batch_size should not be here. Should wrap the dataset with a dataloader.
+        """
         self.T_pos = int(T_pos)
         self.T_neg = int(T_neg)
         self.batch_size = batch_size
         self.window_length = window_length
         self.predict_delay = predict_delay
         self.sampling_freq = sampling_freq
-        self.files = [f for f in os.listdir(data_folder) if f.endswith("PSG.edf")]
-        self.preprocessed = []
-        for f in tqdm(self.files):
-            full_path = os.path.join(data_folder, f)
-            pp_file = preprocess(full_path)
-            self.preprocessed.append(pp_file)
+        if ((raw_data_folder is None and preprocessed_file is None)
+            or (raw_data_folder is not None and preprocessed_file is not None)):
+            raise ValueError("Dataset requires a preprocessed_file or a raw_data_folder")
+        
+        if raw_data_folder is not None:
+            self.files = [f for f in os.listdir(raw_data_folder) if f.endswith("PSG.edf")]
+            self.preprocessed = []
+            for f in tqdm(self.files):
+                full_path = os.path.join(raw_data_folder, f)
+                pp_file = preprocess(full_path)
+                self.preprocessed.append(pp_file)
+            if save_preprocessed_path is not None:
+                np.save(self.preprocessed, save_preprocessed_path)
+
+        elif preprocessed_file is not None:
+            self.preprocessed = np.load(preprocessed_file)
 
         self.num_files = len(self.files)
-        self.num_epochs = len(self.preprocessed[0])
+        self.num_epochs = len(self.preprocessed) # TODO: this varies depending on the file
         self.num_samples = 6
 
     def __len__(self):
         return self.num_files * self.num_epochs * self.num_samples
 
     def __getitem__(self, idx):
-        file_idx = (idx // 6) // self.num_epochs
-        epoch_idx = (idx // 6) % self.num_epochs
-        sample_idx = idx % 6
+        file_idx = (idx // self.num_samples) // self.num_epochs
+        epoch_idx = (idx // self.num_samples) % self.num_epochs
+        sample_idx = idx % self.num_samples
 
         ### Sampling with the indexes
         f = self.preprocessed[file_idx]
@@ -63,7 +77,7 @@ class EEG_SSL_Dataset(Dataset):
 
     def get_batch(self, batch_size):
         minibatch_RP = []
-        maxRange = self.num_files * self.num_epochs * 6
+        maxRange = self.num_files * self.num_epochs * self.num_samples
         files = random.sample(range(maxRange), batch_size)
         for idx in files:
             RP_dataset, RP_labels = self.__getitem__(idx)
@@ -83,19 +97,19 @@ class EEG_SSL_Dataset(Dataset):
                 L - # of samples = # of user * # of epochs per user * 6
                 2 - sample1 + sample2
                 s - # of eeg channels in each sample
-                c - Samples per channel = 30s * 128Hz
+                c - Samples per channel = 30s * 100Hz
             TS_labels - Temporal Shuffling labels of dimensions (1, L)
                 for each y = {1: if |sample1-sample2| < self.T_pos and -1: if |sample1-sample2| > self.T_neg}
         """
         np.random.seed(0)
-        RP_dataset = np.empty((1, 2, epochs.shape[1], 3867))
+        RP_dataset = np.empty((1, 2, epochs.shape[1], self.window_length*self.sampling_freq))
         RP_labels = np.empty((1, 1))
         counter = 0
         sample1 = epochs[epoch_idx]
         if sample_idx <= 2: # self.T_pos loop
             np.random.seed(sample_idx)
             sample2_index = np.random.randint(max(epoch_idx-self.T_pos, 0), min(epoch_idx+self.T_pos, epochs.shape[0]-1))
-            while sample2_index == epoch_idx: # should not be the same
+            while sample2_index == epoch_idx: # should not be the same (TODO: could fix the previous line so this doesn't happen)
                 sample2_index = np.random.randint(max(epoch_idx-self.T_pos, 0), min(epoch_idx+self.T_pos, epochs.shape[0]-1))
             sample2 = epochs[sample2_index]
             y = 1
