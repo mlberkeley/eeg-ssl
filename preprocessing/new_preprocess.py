@@ -67,13 +67,14 @@ def divide_epochs(raw, epoch_length):
     """
 
     raw_np = raw.get_data()
+    s_freq = raw.info['sfreq']
     n_channels, n_time_points = raw_np.shape[0], raw_np.shape[1]
 
-    # make n_time_points a multiple of epoch_length
-    chopped_n_time_points = n_time_points - (n_time_points % epoch_length) 
+    # make n_time_points a multiple of epoch_length*s_freq
+    chopped_n_time_points = n_time_points - (n_time_points % (epoch_length*s_freq))
     raw_np = raw_np[:,:chopped_n_time_points]
 
-    return raw_np.reshape(n_channels, epoch_length)
+    return raw_np.reshape(n_channels, epoch_length*s_freq)
 
 def downsample(epochs, chs, Hz=128):
     """ Downsample the EEG epoch to Hz=128 Hz and to only
