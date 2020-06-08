@@ -56,7 +56,7 @@ class EEG_SSL_Dataset(Dataset):
             self.preprocessed, self.files = pickle.load(open(preprocessed_file, 'rb'))
 
         self.num_files = len(self.files)
-        self.num_epochs = len(self.preprocessed) # TODO: this varies depending on the file
+        self.num_epochs = min(len(recording) for recording in self.preprocessed) # TODO: this varies depending on the file
         self.num_samples = 6
 
     def __len__(self):
