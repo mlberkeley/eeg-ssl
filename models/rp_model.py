@@ -7,7 +7,7 @@ class Relative_Positioning(nn.Module):
     super().__init__()
     self.feature_extractor = EEG_FeatureExtractor(C, T, k, m, dropout_prob, embedding_dim, n_spatial_filters).cuda()
     self.linear = nn.Linear(embedding_dim, 1)
-    self.loss_fn = nn.BCEWithLogitsLoss(reduction=None)
+    self.loss_fn = nn.BCEWithLogitsLoss(reduction='none')
 
   def forward(self, x):
     first_samples = x[:,0].unsqueeze(dim=1)
