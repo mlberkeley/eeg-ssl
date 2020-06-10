@@ -80,7 +80,7 @@ def _eval_loss(model, data_loader):
 		for pair in data_loader:
 			x, y = pair[0], pair[1]
 			x = x.cuda().float().contiguous()
-			y = y.cuda().long().contiguous()
+			y = y.cuda().float().contiguous()
 			loss = model.loss(x, y)
 			total_loss += loss * x.shape[0]
 		avg_loss = total_loss / len(data_loader.dataset)
