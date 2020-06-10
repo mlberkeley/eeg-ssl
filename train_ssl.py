@@ -18,8 +18,8 @@ def train_ssl(train_dataset, test_dataset, n_epochs=20, lr=1e-3, batch_size=256,
 	if load_last_saved_model:
 		model.load_state_dict(torch.load(op.join(root, 'saved_models', 'supervised_baseline_model.pt')))
 
-	train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-	test_loader = data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True)
+	train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
+	test_loader = data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
 
 	new_train_losses, new_test_losses = _train_epochs(model, train_loader, test_loader, 
 																				 dict(epochs=n_epochs, lr=lr))
