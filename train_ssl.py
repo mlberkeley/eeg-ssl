@@ -7,6 +7,7 @@ from .train_helpers import normalize, get_loss_weights, load_losses, save_losses
 from .models import Relative_Positioning
 import os.path as op
 import os
+import tqdm
 
 root = op.dirname(__file__)
 saved_models_dir = op.join(root, 'saved_models')
@@ -62,7 +63,8 @@ def _train(model, train_loader, optimizer, epoch):
 	model.train()
 	
 	train_losses = []
-	for pair in train_loader:
+	pbar = tqdm(train_loader)
+	for pair in pbar:
 		x, y = pair[0], pair[1]
 		x = x.cuda().float().contiguous()
 		y = y.cuda().float().contiguous()
@@ -71,6 +73,7 @@ def _train(model, train_loader, optimizer, epoch):
 		loss.backward()
 		optimizer.step()
 		train_losses.append(loss.item())
+		pbar.write(loss.item())
 	return train_losses
 
 def _eval_loss(model, data_loader):
