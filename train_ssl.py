@@ -65,7 +65,7 @@ def _train(model, train_loader, optimizer, epoch):
 	for pair in train_loader:
 		x, y = pair[0], pair[1]
 		x = x.cuda().float().contiguous()
-		y = y.cuda().long().contiguous()
+		y = y.cuda().float().contiguous()
 		loss = model.loss(x, y)
 		optimizer.zero_grad()
 		loss.backward()
