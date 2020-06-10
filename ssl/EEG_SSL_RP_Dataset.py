@@ -56,7 +56,7 @@ class EEG_SSL_Dataset(Dataset):
             self.preprocessed, self.files = pickle.load(open(preprocessed_file, 'rb'))
 
         self.num_files = len(self.files)
-        self.num_epochs = min(len(recording) for recording in self.preprocessed) # TODO: this varies depending on the file
+        self.num_epochs = min(len(recording) for recording in self.preprocessed) # TODO: should use all the info
         self.num_samples = 6
 
     def __len__(self):
@@ -92,12 +92,12 @@ class EEG_SSL_Dataset(Dataset):
             self.T_neg - negative context to sample from
             num_samples - int representing number of epochs to sample
         Output:
-            TS_dataset - Temporal Shuffling Dataset of dimensions (L, 3, s, c)
+            RP_dataset - Relative Positioning Dataset of dimensions (L, 2, s, c)
                 L - # of samples = # of user * # of epochs per user * 6
                 2 - sample1 + sample2
                 s - # of eeg channels in each sample
                 c - Samples per channel = 30s * 100Hz
-            TS_labels - Temporal Shuffling labels of dimensions (1, L)
+            RP_labels - Relative Positioning labels of dimensions (1, L)
                 for each y = {1: if |sample1-sample2| < self.T_pos and -1: if |sample1-sample2| > self.T_neg}
         """
         np.random.seed(0)
