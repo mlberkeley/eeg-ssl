@@ -12,8 +12,8 @@ root = op.dirname(__file__)
 saved_models_dir = op.join(root, 'saved_models')
 
 def train_ssl(train_dataset, test_dataset, n_epochs=20, lr=1e-3, batch_size=256, load_last_saved_model=False):
-	C = train_dataset.__getitem__(0)[0].shape[2] # num channels
-	T = train_dataset.__getitem__(0)[0].shape[3] # num timepoints
+	C = train_dataset.__getitem__(0)[0].shape[1] # num channels
+	T = train_dataset.__getitem__(0)[0].shape[2] # num timepoints
 	model = Relative_Positioning(C, T, k=50, m=13, dropout_prob=0.5, embedding_dim=100, n_spatial_filters=8).cuda()
 	if load_last_saved_model:
 		model.load_state_dict(torch.load(op.join(root, 'saved_models', 'supervised_baseline_model.pt')))
