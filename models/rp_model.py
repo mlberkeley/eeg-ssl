@@ -1,8 +1,6 @@
 import torch
 from torch import nn
 from .feature_extractor import EEG_FeatureExtractor
-import IPython
-e = IPython.embed
 
 class Relative_Positioning(nn.Module):
   def __init__(self, C, T, k=50, m=13, dropout_prob=0.5, embedding_dim=100, n_spatial_filters=8):
@@ -25,5 +23,4 @@ class Relative_Positioning(nn.Module):
   
   def loss(self, x, labels):
     out = self(x)
-    e()
     return self.loss_fn(out, labels)
