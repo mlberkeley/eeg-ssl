@@ -69,33 +69,28 @@ class EEG_SSL_Dataset(Dataset):
 
         ### Sampling with the indexes
         f = self.preprocessed[file_idx]
-        RP_dataset, RP_labels = self.relative_positioning(f, epoch_idx, sample_idx)
+        RP_sample, RP_label = self.relative_positioning(f, epoch_idx, sample_idx)
 
-        return RP_dataset, RP_labels
+        return RP_sample, RP_label
     
     def relative_positioning(self, epochs, epoch_idx, sample_idx):
-        """ Builds a self-supervised (relative positioning) dataset of epochs
+        """ Retrives a self-supervised (relative positioning) sample
         Args:
             epochs - Numpy datset of time-series arrays
             self.T_pos - positive context to sample from
             self.T_neg - negative context to sample from
             num_samples - int representing number of epochs to sample
         Output:
-            RP_dataset - Relative Positioning Dataset of dimensions (L, 2, s, c)
-                L - # of samples = # of user * # of epochs per user * 6
+            RP_sample - Relative Positioning sample of dimensions (2, s, c)
                 2 - sample1 + sample2
                 s - # of eeg channels in each sample
                 c - Samples per channel = 30s * 100Hz
-            RP_labels - Relative Positioning labels of dimensions (1, L)
+            RP_labels - Relative Positioning label of dimensions (1)
                 for each y = {1: if |sample1-sample2| < self.T_pos and -1: if |sample1-sample2| > self.T_neg}
         """
         np.random.seed(0)
-        RP_dataset = np.empty((1, 2, epochs.shape[1], self.window_length*self.sampling_freq))
-        RP_labels = np.empty((1, 1))
-        counter = 0
 
         # TODO: Ask Alfredo to explain what is going on here.
-
         sample1 = epochs[epoch_idx]
         if sample_idx <= 2: # self.T_pos loop
             np.random.seed(sample_idx)
@@ -105,9 +100,7 @@ class EEG_SSL_Dataset(Dataset):
             sample2 = epochs[sample2_index]
             y = 1
             RP_sample = np.array([sample1, sample2])
-            RP_dataset[counter] = RP_sample
-            RP_labels[counter] = y
-            counter += 1
+            RP_label = y
         else: # Loop for self.T_neg
             np.random.seed(sample_idx)
             if epoch_idx-self.T_neg <= 0: # self.T_neg if (corners)
@@ -121,7 +114,5 @@ class EEG_SSL_Dataset(Dataset):
             sample2 = epochs[sample2_index]
             y = -1
             RP_sample = np.array([sample1, sample2])
-            RP_dataset[counter] = RP_sample
-            RP_labels[counter] = y
-            counter += 1
-        return RP_dataset, RP_labels
+            RP_label = y
+        return RP_sample, RP_label
