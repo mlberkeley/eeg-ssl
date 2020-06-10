@@ -72,17 +72,6 @@ class EEG_SSL_Dataset(Dataset):
         RP_dataset, RP_labels = self.relative_positioning(f, epoch_idx, sample_idx)
 
         return RP_dataset, RP_labels
-
-
-    def get_batch(self, batch_size):
-        minibatch_RP = []
-        maxRange = self.num_files * self.num_epochs * self.num_samples
-        files = random.sample(range(maxRange), batch_size)
-        for idx in files:
-            RP_dataset, RP_labels = self.__getitem__(idx)
-            minibatch_RP.append((RP_dataset, RP_labels))
-
-        return minibatch_RP
     
     def relative_positioning(self, epochs, epoch_idx, sample_idx):
         """ Builds a self-supervised (relative positioning) dataset of epochs
@@ -104,6 +93,9 @@ class EEG_SSL_Dataset(Dataset):
         RP_dataset = np.empty((1, 2, epochs.shape[1], self.window_length*self.sampling_freq))
         RP_labels = np.empty((1, 1))
         counter = 0
+
+        # TODO: Ask Alfredo to explain what is going on here.
+
         sample1 = epochs[epoch_idx]
         if sample_idx <= 2: # self.T_pos loop
             np.random.seed(sample_idx)
@@ -125,7 +117,7 @@ class EEG_SSL_Dataset(Dataset):
             else:
                 sample2_index_1 = np.random.randint(epoch_idx+self.T_neg, epochs.shape[0])
                 sample2_index_2 = np.random.randint(0, epoch_idx-self.T_neg)
-                sample2_index = list([sample2_index_1, sample2_index_2])[int(random.uniform(0,1))]
+                sample2_index = list([sample2_index_1, sample2_index_2])[int(random.uniform(0,1))] # why int(random.uniform(0,1))? That's always 0...
             sample2 = epochs[sample2_index]
             y = -1
             RP_sample = np.array([sample1, sample2])
