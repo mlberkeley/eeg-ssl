@@ -71,7 +71,6 @@ def _train(model, train_loader, optimizer, epoch):
 		loss.backward()
 		optimizer.step()
 		train_losses.append(loss.item())
-		print(loss.item())
 	return train_losses
 
 def _eval_loss(model, data_loader):
