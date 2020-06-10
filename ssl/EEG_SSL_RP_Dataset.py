@@ -98,7 +98,7 @@ class EEG_SSL_Dataset(Dataset):
             while sample2_index == epoch_idx: # should not be the same (TODO: could fix the previous line so this doesn't happen)
                 sample2_index = np.random.randint(max(epoch_idx-self.T_pos, 0), min(epoch_idx+self.T_pos, epochs.shape[0]-1))
             sample2 = epochs[sample2_index]
-            y = np.array(1)
+            y = np.array([1])
             RP_sample = np.array([sample1, sample2])
             RP_label = y
         else: # Loop for self.T_neg
@@ -112,7 +112,7 @@ class EEG_SSL_Dataset(Dataset):
                 sample2_index_2 = np.random.randint(0, epoch_idx-self.T_neg)
                 sample2_index = list([sample2_index_1, sample2_index_2])[int(random.uniform(0,1))] # why int(random.uniform(0,1))? That's always 0...
             sample2 = epochs[sample2_index]
-            y = np.array(-1)
+            y = np.array([-1])
             RP_sample = np.array([sample1, sample2])
             RP_label = y
         return RP_sample, RP_label
