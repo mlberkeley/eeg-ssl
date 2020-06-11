@@ -16,6 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
+from math import floor, ceil
 
 # Ignore warnings
 import warnings
@@ -35,8 +36,8 @@ class EEG_SSL_Dataset(Dataset):
         """
         Takes in either a data folder or a preprocessed file
         """
-        self.T_pos = np.floor(T_pos * MINUTES_TO_SECONDS / window_length) # convert units from minutes to # of time windows
-        self.T_neg = np.ceil(T_neg * MINUTES_TO_SECONDS / window_length)
+        self.T_pos = floor(T_pos * MINUTES_TO_SECONDS / window_length) # convert units from minutes to # of time windows
+        self.T_neg = ceil(T_neg * MINUTES_TO_SECONDS / window_length)
         self.anchor_windows_per_recording = int(anchor_windows_per_recording)
         self.window_length = window_length # in seconds
         self.predict_delay = predict_delay
@@ -119,13 +120,11 @@ class EEG_SSL_Dataset(Dataset):
         if sample_idx <= 2: # self.T_pos loop
             pos_idx = self.sample_pos_idx(anchor_idx, len(recording))
             pos_window = recording[pos_idx]
-            y = np.array([1])
             RP_sample = np.array([anchor_window, pos_window])
-            RP_label = y
+            RP_label = np.array([1])
         else: # Loop for self.T_neg
             neg_idx = self.sample_neg_idx(anchor_idx, len(recording))
             neg_window = recording[neg_idx]
-            y = np.array([-1])
             RP_sample = np.array([anchor_window, neg_window])
-            RP_label = y
+            RP_label = np.array([-1])
         return RP_sample, RP_label
