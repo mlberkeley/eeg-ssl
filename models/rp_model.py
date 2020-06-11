@@ -20,8 +20,3 @@ class Relative_Positioning(nn.Module):
 
     out = self.linear(h_combined)
     return out
-  
-  def loss(self, x, labels):
-    out = self(x)
-    loss = self.loss_fn(out, labels)
-    return loss

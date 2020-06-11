@@ -2,6 +2,8 @@ import torch
 from torch import optim
 from torch.utils import data
 from torch import nn
+from torch.nn.functional import soft_margin_loss
+
 import numpy as np
 from .train_helpers import normalize, get_loss_weights, load_losses, save_losses
 
@@ -63,6 +65,11 @@ def _train_epochs(model, train_loader, test_loader, train_args):
 	torch.save(model.state_dict(), op.join(root, 'saved_models', 'supervised_baseline_model.pt'))
 	return train_losses, test_losses
 
+def rp_loss(model, x, y):
+	out = model(x)
+	return soft_margin_loss(out, y)
+
+
 def _train(model, train_loader, optimizer, epoch):
 	model.train()
 	
@@ -71,7 +78,7 @@ def _train(model, train_loader, optimizer, epoch):
 		x, y = pair[0], pair[1]
 		x = x.cuda().float().contiguous()
 		y = y.cuda().float().contiguous()
-		loss = model.loss(x, y)
+		loss = rp_loss(model, x, y)
 		optimizer.zero_grad()
 		loss.backward()
 		optimizer.step()
@@ -86,7 +93,7 @@ def _eval_loss(model, data_loader):
 			x, y = pair[0], pair[1]
 			x = x.cuda().float().contiguous()
 			y = y.cuda().float().contiguous()
-			loss = model.loss(x, y)
+			loss = rp_loss(model, x, y)
 			total_loss += loss * x.shape[0]
 		avg_loss = total_loss / len(data_loader.dataset)
 
