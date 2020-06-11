@@ -84,7 +84,7 @@ class EEG_SSL_Dataset(Dataset):
         left_interval_start = max(anchor_idx-self.T_pos, 0)
         right_interval_end = min(anchor_idx+self.T_pos, recording_len)
 
-        random_idx = np.random.randint(left_interval_start + right_interval_end - 1)
+        random_idx = np.random.randint(right_interval_end - left_interval_start - 1)
         left_interval_length = anchor_idx - left_interval_start
         if random_idx > left_interval_length:
             random_idx += 1
