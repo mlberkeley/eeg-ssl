@@ -81,8 +81,8 @@ class EEG_SSL_Dataset(Dataset):
         sample positive sample index uniformly in the union of 2 intervals
         (anchor_idx-self.T_pos, anchor_idx) u (anchor_idx, anchor_idx+self.T_pos)
         """
-        left_interval_start = min(anchor_idx+self.T_pos, recording_len)
-        right_interval_end = max(anchor_idx-self.T_pos, 0)
+        left_interval_start = max(anchor_idx-self.T_pos, 0)
+        right_interval_end = min(anchor_idx+self.T_pos, recording_len)
 
         random_idx = np.random.randint(left_interval_start + right_interval_end - 1)
         left_interval_length = anchor_idx - left_interval_start
