@@ -64,7 +64,7 @@ class EEG_SSL_Dataset(Dataset):
         file_idx = idx // (self.num_samples * self.anchor_windows_per_recording)
         sample_idx = idx % self.num_samples
         f = self.preprocessed[file_idx]
-        epoch_idx = np.random.randnint(len(f))
+        epoch_idx = np.random.randint(len(f))
 
         ### Sampling with the indexes
         RP_sample, RP_label = self.relative_positioning(f, epoch_idx, sample_idx)
