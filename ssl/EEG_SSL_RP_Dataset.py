@@ -90,7 +90,7 @@ class EEG_SSL_Dataset(Dataset):
         # TODO: Ask Alfredo to explain what is going on here.
         sample1 = recording[epoch_idx]
         if sample_idx <= 2: # self.T_pos loop
-            np.random.seed(sample_idx)
+            # np.random.seed(sample_idx)
             sample2_index = np.random.randint(max(epoch_idx-self.T_pos, 0), min(epoch_idx+self.T_pos, recording.shape[0]-1))
             while sample2_index == epoch_idx: # should not be the same (TODO: could fix the previous line so this doesn't happen)
                 sample2_index = np.random.randint(max(epoch_idx-self.T_pos, 0), min(epoch_idx+self.T_pos, recording.shape[0]-1))
@@ -99,7 +99,7 @@ class EEG_SSL_Dataset(Dataset):
             RP_sample = np.array([sample1, sample2])
             RP_label = y
         else: # Loop for self.T_neg
-            np.random.seed(sample_idx)
+            # np.random.seed(sample_idx)
             if epoch_idx-self.T_neg <= 0: # self.T_neg if (corners)
                 sample2_index = np.random.randint(epoch_idx+self.T_neg, recording.shape[0])
             elif epoch_idx+self.T_neg >= recording.shape[0]: # take care of low == high
