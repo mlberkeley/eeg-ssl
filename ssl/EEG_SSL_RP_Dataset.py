@@ -18,9 +18,6 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 from math import floor, ceil
 
-import IPython
-e = IPython.embed
-
 # Ignore warnings
 import warnings
 warnings.filterwarnings("ignore")
@@ -130,5 +127,4 @@ class EEG_SSL_Dataset(Dataset):
             neg_window = recording[neg_idx]
             RP_sample = np.concatenate((anchor_window, neg_window))
             RP_label = np.array([-1])
-        e()
         return RP_sample, RP_label
