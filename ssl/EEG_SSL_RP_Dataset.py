@@ -18,6 +18,9 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 from math import floor, ceil
 
+import IPython
+e = IPython.embed
+
 # Ignore warnings
 import warnings
 warnings.filterwarnings("ignore")
@@ -120,11 +123,12 @@ class EEG_SSL_Dataset(Dataset):
         if sample_idx < self.samples_per_anchor_window / 2: # self.T_pos loop
             pos_idx = self.sample_pos_idx(anchor_idx, len(recording))
             pos_window = recording[pos_idx]
-            RP_sample = np.array([anchor_window, pos_window])
+            RP_sample = np.concatenate((anchor_window, pos_window))
             RP_label = np.array([1])
         else: # Loop for self.T_neg
             neg_idx = self.sample_neg_idx(anchor_idx, len(recording))
             neg_window = recording[neg_idx]
-            RP_sample = np.array([anchor_window, neg_window])
+            RP_sample = np.concatenate((anchor_window, neg_window))
             RP_label = np.array([-1])
+        e()
         return RP_sample, RP_label
