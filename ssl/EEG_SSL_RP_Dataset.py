@@ -82,8 +82,8 @@ class EEG_SSL_Dataset(Dataset):
         (anchor_idx-self.T_pos, anchor_idx) u (anchor_idx, anchor_idx+self.T_pos)
         """
         # TODO: check off by 1 errors
-        left_interval_start = max(anchor_idx-self.T_pos, 0)
-        right_interval_end = min(anchor_idx+self.T_pos, recording_len)
+        left_interval_start = max(anchor_idx-self.T_pos + 1, 0) # (endpoint included)
+        right_interval_end = min(anchor_idx+self.T_pos, recording_len) # (endpoint not included)
         
         random_idx = None
         while random_idx != None and random_idx != anchor_idx:
@@ -95,6 +95,7 @@ class EEG_SSL_Dataset(Dataset):
         sample negative sample index uniformly in the union of 2 intervals
         (0, anchor_idx-self.T_neg) U (anchor_idx+self.T_neg, recording_len)
         """
+        # TODO: check off by 1 errors
         random_idx = np.random.randint(recording_len-2*self.T_neg)
         if random_idx >= anchor_idx - self.T_neg:
             random_idx += 2*self.T_neg
