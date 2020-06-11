@@ -86,7 +86,6 @@ class EEG_SSL_Dataset(Dataset):
             RP_labels - Relative Positioning label of dimensions (1)
                 for each y = {1: if |sample1-sample2| < self.T_pos and -1: if |sample1-sample2| > self.T_neg}
         """
-        np.random.seed(0) # TODO: this shouldn't be here... otherwise you will get the same windows each time
 
         # TODO: Ask Alfredo to explain what is going on here.
         sample1 = recording[epoch_idx]
