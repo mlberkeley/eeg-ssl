@@ -81,14 +81,13 @@ class EEG_SSL_Dataset(Dataset):
         sample positive sample index uniformly in the union of 2 intervals
         (anchor_idx-self.T_pos, anchor_idx) u (anchor_idx, anchor_idx+self.T_pos)
         """
+        # TODO: check off by 1 errors
         left_interval_start = max(anchor_idx-self.T_pos, 0)
         right_interval_end = min(anchor_idx+self.T_pos, recording_len)
-
-        random_idx = np.random.randint(right_interval_end - left_interval_start - 1)
-        left_interval_length = anchor_idx - left_interval_start
-        if random_idx > left_interval_length:
-            random_idx += 1
-        random_idx += anchor_idx-self.T_pos
+        
+        random_idx = None
+        while random_idx != None and random_idx != anchor_idx:
+            random_idx = np.random.randint(left_interval_start, right_interval_end)
         return random_idx
 
     def sample_neg_idx(self, anchor_idx, recording_len):
@@ -97,7 +96,7 @@ class EEG_SSL_Dataset(Dataset):
         (0, anchor_idx-self.T_neg) U (anchor_idx+self.T_neg, recording_len)
         """
         random_idx = np.random.randint(recording_len-2*self.T_neg)
-        if random_idx > anchor_idx - self.T_neg:
+        if random_idx >= anchor_idx - self.T_neg:
             random_idx += 2*self.T_neg
         return random_idx
 
@@ -120,12 +119,12 @@ class EEG_SSL_Dataset(Dataset):
         if sample_idx < self.samples_per_anchor_window / 2: # self.T_pos loop
             pos_idx = self.sample_pos_idx(anchor_idx, len(recording))
             pos_window = recording[pos_idx]
-            # RP_sample = np.array([anchor_window, pos_window])
+            RP_sample = np.array([anchor_window, pos_window])
             RP_label = np.array([1])
         else: # Loop for self.T_neg
             neg_idx = self.sample_neg_idx(anchor_idx, len(recording))
             neg_window = recording[neg_idx]
-            # RP_sample = np.array([anchor_window, neg_window])
+            RP_sample = np.array([anchor_window, neg_window])
             RP_label = np.array([-1])
         RP_sample = np.array([7])
         return RP_sample, RP_label
