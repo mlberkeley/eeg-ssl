@@ -1,6 +1,7 @@
 import torch
 from torch import optim
 from torch.utils import data
+from torch import nn
 import numpy as np
 from .train_helpers import normalize, get_loss_weights, load_losses, save_losses
 
