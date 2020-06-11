@@ -14,9 +14,13 @@ saved_models_dir = op.join(root, 'saved_models')
 def train_ssl(train_dataset, test_dataset, n_epochs=20, lr=1e-3, batch_size=256, load_last_saved_model=False):
 	C = train_dataset.__getitem__(0)[0].shape[1] # num channels
 	T = train_dataset.__getitem__(0)[0].shape[2] # num timepoints
-	model = Relative_Positioning(C, T, k=50, m=13, dropout_prob=0.5, embedding_dim=100, n_spatial_filters=8).cuda()
+	model = Relative_Positioning(C, T, k=50, m=13, dropout_prob=0.5, embedding_dim=100, n_spatial_filters=8)
 	if load_last_saved_model:
 		model.load_state_dict(torch.load(op.join(root, 'saved_models', 'supervised_baseline_model.pt')))
+
+	if torch.cuda.device_count() > 1:
+		model = nn.DataParallel(model)
+	model.cuda()
 
 	train_loader = data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
 	test_loader = data.DataLoader(test_dataset, batch_size=batch_size, shuffle=True, num_workers=8)
