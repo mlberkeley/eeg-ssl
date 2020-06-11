@@ -117,14 +117,15 @@ class EEG_SSL_Dataset(Dataset):
                 for each y = {1: if |sample1-sample2| < self.T_pos and -1: if |sample1-sample2| > self.T_neg}
         """
         anchor_window = recording[anchor_idx]
-        if sample_idx <= 2: # self.T_pos loop
+        if sample_idx < self.samples_per_anchor_window / 2: # self.T_pos loop
             pos_idx = self.sample_pos_idx(anchor_idx, len(recording))
             pos_window = recording[pos_idx]
-            RP_sample = np.array([anchor_window, pos_window])
+            # RP_sample = np.array([anchor_window, pos_window])
             RP_label = np.array([1])
         else: # Loop for self.T_neg
             neg_idx = self.sample_neg_idx(anchor_idx, len(recording))
             neg_window = recording[neg_idx]
-            RP_sample = np.array([anchor_window, neg_window])
+            # RP_sample = np.array([anchor_window, neg_window])
             RP_label = np.array([-1])
+        RP_sample = np.array([7])
         return RP_sample, RP_label
