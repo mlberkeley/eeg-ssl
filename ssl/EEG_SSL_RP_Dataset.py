@@ -127,5 +127,4 @@ class EEG_SSL_Dataset(Dataset):
             neg_window = recording[neg_idx]
             RP_sample = np.array([anchor_window, neg_window])
             RP_label = np.array([-1])
-        RP_sample = np.array([7])
         return RP_sample, RP_label
