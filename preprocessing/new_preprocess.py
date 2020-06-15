@@ -3,46 +3,41 @@ import numpy as np
 import mne
 from mne import preprocessing
 import sys
+import time
 
-
-def preprocess(file):
+def preprocess(f):
     """ Runs the whole pipeline and returns NumPy data array"""
-    SAMPLE_TIME = 30
+    epoch_length = 30 # s
     CHANNELS = ['EEG Fpz-Cz', 'EEG Pz-Oz']
     
-    raw = mne.io.read_raw_edf(file, preload=True)
-
+    raw = mne.io.read_raw_edf(f, preload=True, verbose='ERROR')
     mne_eeg = remove_sleepEDF(raw, CHANNELS)
+    mne_filtered = filter_eeg(mne_eeg, CHANNELS)
+    epochs = divide_epochs(mne_filtered, epoch_length)
     
-    mne_filtered = filter(mne_eeg, CHANNELS)
-    
-    epochs = divide_epochs(mne_filtered, SAMPLE_TIME)
-    
-    epochs = downsample(epochs, CHANNELS)
+    # epochs = downsample(epochs, CHANNELS) [it's already at 100 Hz]
 
-    epochs = epochs.get_data() # turns into NumPy Array
-
-    f_epochs = normalization(epochs)
+    f_epochs = normalization(epochs) # should update this
 
     #np.save(file[:file.index("-")], f_epochs)
     
     return f_epochs
 
-def remove_sleepEDF(mne_raw, CHANNELS):
+def remove_sleepEDF(mne_raw, channels):
     """Extracts CHANNELS channels from MNE_RAW data.
 
     Args:
     raw - mne data strucutre of n number of recordings and t seconds each
-    CHANNELS - channels wished to be extracted
+    channels - channels wished to be extracted
 
     Returns:
     extracted - mne data structure with only specified channels
     """
-    extracted = mne_raw.pick_channels(CHANNELS)
+    extracted = mne_raw.pick_channels(channels)
     return extracted
 
-def filter(mne_eeg, chs):
-    """Creates a 30 Hz 4th-order FIR lowpass filter that is applied to the CHS channels from the MNE_EEG data.
+def filter_eeg(mne_eeg, channels):
+    """Creates a 30 Hz 4th-order FIR lowpass filter that is applied to the channels channels from the MNE_EEG data.
 
     Args:
         mne-eeg - mne data strucutre of n number of recordings and t seconds each
@@ -53,50 +48,33 @@ def filter(mne_eeg, chs):
     
     filtered = mne_eeg.filter(l_freq=None,
             h_freq= 30,
-            picks = chs,
+            picks = channels,
             filter_length = "auto",
-            method = "fir"
+            method = "fir",
+            verbose='ERROR'
             )
     return filtered
 
-def _create_events(raw, epoch_length):
-    """Creates events at the right times split raw into epochs of length epoch_length seconds.
-
-    Args:
-        raw - mne data strucutre of n number of recordings and t seconds each
-        epoch_length - (seconds) the length of each outputting epoch.
-
-    Returns:
-        events - Numpy array of events  of epochs
-    """
-    file_length = raw.n_times
-    first_samp = raw.first_samp
-    sfreq = raw.info['sfreq']
-    n_samp_in_epoch = int(epoch_length * sfreq)
-
-    n_epochs = int(file_length // n_samp_in_epoch)
-
-    events = []
-    for i_epoch in range(n_epochs):
-        events.append([first_samp + i_epoch * n_samp_in_epoch, int(0), int(0)])
-    events = np.array(events)
-    return events
-
-def divide_epochs(raw, e_len):
-    """ Divides the mne dataset into many samples of length e_len seconds.
+def divide_epochs(raw, epoch_length):
+    """ Divides the mne dataset into many samples of length epoch_length seconds.
 
     Args:
         E: mne data structure
-        e_len: (int seconds) length of each sample
+        epoch_length: (int seconds) length of each sample
 
     Returns:
-        epochs: mne data structure of (experiment length * users) / e_len
+        epochs: mne data structure of (experiment length * users) / epoch_length
     """
-    if raw.times[-1] >= e_len:
-        events = _create_events(raw, e_len)
 
-    epochs = mne.Epochs(raw, events=events, tmax=e_len, preload=True)
-    return epochs
+    raw_np = raw.get_data()
+    s_freq = int(raw.info['sfreq'])
+    n_channels, n_time_points = raw_np.shape[0], raw_np.shape[1]
+
+    # make n_time_points a multiple of epoch_length*s
+    chopped_n_time_points = n_time_points - (n_time_points % (epoch_length*s_freq))
+    raw_np = raw_np[:,:chopped_n_time_points]
+
+    return raw_np.reshape(n_channels, -1, epoch_length*s_freq).transpose(1,0,2)
 
 def downsample(epochs, chs, Hz=128):
     """ Downsample the EEG epoch to Hz=128 Hz and to only
@@ -109,7 +87,7 @@ def downsample(epochs, chs, Hz=128):
         Returns
             E: a mne data structure sampled at a rate r of 128 Hz.
     """
-    E = epochs.pick_types(eeg=True, selection=chs)
+    E = epochs.pick_types(eeg=True, selection=chs, verbose='ERROR')
     E = E.resample(Hz, npad='auto')
     return E
 
@@ -134,7 +112,7 @@ def normalization(epochs):
         Returns:
             epochs_n - mne data structure of normalized epochs (mean=0, var=1)
     """
-    for i in range(epochs.shape[0]):
+    for i in range(epochs.shape[0]): # TODO could switch to a 1-line numpy matrix operation
         for j in range(epochs.shape[1]):
             epochs[i,j,:] = _normalize(epochs[i,j,:])
 
