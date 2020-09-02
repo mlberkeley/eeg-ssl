@@ -4,7 +4,6 @@
 
 This implementation is based on the [paper](https://arxiv.org/pdf/1911.05419.pdf) by Banville et al.
 
---add more description about program here
 # Directories
 * `experiments` : Improvement experiments folder
 * `images` : Folder for images for README and results
